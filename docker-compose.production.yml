@@ -1,0 +1,44 @@
+version: '3.5'
+services:
+  frontend:
+    image: 'registry.gitlab.com/arontier/ad3/aid-frontend:${FRONTEND_TAG}'
+    build:
+      context: .
+      dockerfile: docker/production/Dockerfile
+      args:
+        - VUE_APP_TIMEZONE=${TZ}
+        - VUE_APP_LOCALE
+        - VUE_APP_FALLBACK_LOCALE
+        - VUE_APP_REST_API_KEY
+        - VUE_APP_REST_API_SERVER
+        - VUE_APP_REST_API_PREFIX
+        - VUE_APP_RECAPTCHA_SITE_KEY
+        - VUE_APP_RECAPTCHA_SECRET_KEY
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      # @see https://docs.traefik.io/middlewares/redirectscheme/#redirectscheme
+      - 'traefik.http.middlewares.https-redirect.redirectscheme.permanent=true'
+      - 'traefik.http.middlewares.https-redirect.redirectscheme.scheme=https'
+      # @see https://docs.traefik.io/middlewares/redirectregex/#redirectregex
+      - 'traefik.http.middlewares.domain-redirect.redirectregex.regex=^https://$FRONTEND_DOMAIN_SAN/(.*)'
+      - 'traefik.http.middlewares.domain-redirect.redirectregex.replacement=https://$FRONTEND_DOMAIN/$${1}'
+      - 'traefik.http.routers.${FRONTEND_TRAEFIK}.rule=Host(`$FRONTEND_DOMAIN`,`$FRONTEND_DOMAIN_SAN`)'
+      - 'traefik.http.routers.${FRONTEND_TRAEFIK}.entrypoints=http'
+      - 'traefik.http.routers.${FRONTEND_TRAEFIK}.middlewares=https-redirect'
+      - 'traefik.http.routers.secure-${FRONTEND_TRAEFIK}.rule=Host(`$FRONTEND_DOMAIN`,`$FRONTEND_DOMAIN_SAN`)'
+      - 'traefik.http.routers.secure-${FRONTEND_TRAEFIK}.entrypoints=https'
+      - 'traefik.http.routers.secure-${FRONTEND_TRAEFIK}.middlewares=domain-redirect'
+      - 'traefik.http.routers.secure-${FRONTEND_TRAEFIK}.tls.certresolver=http-challenge'
+      - 'traefik.http.services.secure-${FRONTEND_TRAEFIK}.loadbalancer.server.port=80'
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - '${FRONTEND_STORAGE}/conf:/etc/nginx/conf.d:ro'
+    networks:
+      - traefik
+networks:
+  traefik:
+    name: traefik
+    external: true

@@ -1,0 +1,29 @@
+version: '3.5'
+services:
+  frontend:
+    env_file: .env
+    image: 'registry.gitlab.com/arontier/ad3/aid-frontend:${FRONTEND_TAG}'
+    build:
+      context: .
+      dockerfile: docker/development/Dockerfile
+    restart: always
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.${FRONTEND_TRAEFIK}.rule=Host(`${FRONTEND_DOMAIN}`)'
+      - 'traefik.http.routers.${FRONTEND_TRAEFIK}.entrypoints=http'
+      - 'traefik.http.services.${FRONTEND_TRAEFIK}.loadbalancer.server.port=8080'
+    #ports:
+    #  - 5000:8080
+    environment:
+      - TZ=${TZ}
+      - VUE_APP_TIMEZONE=${TZ}
+    volumes:
+      - './frontend:/app'
+    networks:
+      - traefik
+networks:
+  traefik:
+    name: traefik
+    external: true
+
