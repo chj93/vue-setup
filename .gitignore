@@ -162,5 +162,3 @@ $RECYCLE.BIN/
 .env
 /docker-compose.yml
 /docker-compose.yaml
-docs/**/build/
-

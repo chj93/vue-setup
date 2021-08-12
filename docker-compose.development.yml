@@ -2,7 +2,7 @@ version: '3.5'
 services:
   frontend:
     env_file: .env
-    image: 'registry.gitlab.com/arontier/ad3/aid-frontend:${FRONTEND_TAG}'
+    image: 'registry.gitlab.com/arontier/hillbilly/hb-frontend:${FRONTEND_TAG}'
     build:
       context: .
       dockerfile: docker/development/Dockerfile
