@@ -3,7 +3,7 @@ FROM node:12.13.0-alpine AS builder
 COPY frontend/package*.json /app/
 RUN apk add --no-cache git \
   && yarn global add @vue/cli@latest \
-  && cd /app && yarn serve
+  && cd /app && yarn install
 
 # Build app
 # TODO: Make .env passing in runtime
